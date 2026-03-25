@@ -32,24 +32,24 @@ app.add_middleware(
 resend.api_key = os.environ.get("RESEND_API_KEY", "")
 CONTACT_TO = os.environ.get("CONTACT_TO", "jasonalanterry+ht@outlook.com")
 FROM_ADDRESS = os.environ.get("FROM_ADDRESS", "contact@human-thoughts.blog")
-TURNSTILE_SECRET = os.environ.get("TURNSTILE_SECRET", "")
+HCAPTCHA_SECRET = os.environ.get("HCAPTCHA_SECRET", "")
 
 
 class ContactForm(BaseModel):
     name: str = Field(max_length=100)
     email: EmailStr
     message: str = Field(max_length=5000)
-    turnstile_token: str = Field(alias="cf-turnstile-response")
+    hcaptcha_token: str = Field(alias="h-captcha-response")
 
 
-async def verify_turnstile(token: str) -> bool:
-    if not TURNSTILE_SECRET:
+async def verify_hcaptcha(token: str) -> bool:
+    if not HCAPTCHA_SECRET:
         return True  # skip verification if not configured (local dev)
 
     async with httpx.AsyncClient() as client:
         resp = await client.post(
-            "https://challenges.cloudflare.com/turnstile/v0/siteverify",
-            data={"secret": TURNSTILE_SECRET, "response": token},
+            "https://api.hcaptcha.com/siteverify",
+            data={"secret": HCAPTCHA_SECRET, "response": token},
         )
         result = resp.json()
         return result.get("success", False)
@@ -58,7 +58,7 @@ async def verify_turnstile(token: str) -> bool:
 @app.post("/contact")
 @limiter.limit("5/minute")
 async def send_contact(form: ContactForm, request: Request):
-    if not await verify_turnstile(form.turnstile_token):
+    if not await verify_hcaptcha(form.hcaptcha_token):
         raise HTTPException(status_code=403, detail="Captcha verification failed")
 
     if not resend.api_key:
