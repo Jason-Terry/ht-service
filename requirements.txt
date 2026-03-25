@@ -2,3 +2,5 @@ fastapi==0.115.0
 uvicorn==0.30.0
 resend>=2.26.0
 pydantic[email]==2.9.0
+slowapi>=0.1.9
+httpx>=0.27.0
