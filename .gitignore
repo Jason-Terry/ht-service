@@ -1,4 +1,17 @@
 __pycache__/
 *.pyc
-.env
 .venv/
+
+# environment variables
+.env
+.env.production
+.env.local
+
+# claude
+.claude/
+
+# macOS-specific files
+.DS_Store
+
+# jetbrains setting folder
+.idea/
